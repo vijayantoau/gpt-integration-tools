@@ -1,0 +1,72 @@
+{
+  "name": "GPT Integration Tools",
+  "description": "A comprehensive set of tools including weather, calculator, text analysis, and file search capabilities",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "homepage": "https://your-domain.com",
+  "repository": "https://github.com/yourusername/gptintegration",
+  "license": "MIT",
+  "keywords": ["gpt", "tools", "weather", "calculator", "text-analysis", "file-search"],
+  "categories": ["productivity", "utilities", "data-analysis"],
+  "permissions": {
+    "network": true,
+    "filesystem": false
+  },
+  "mcp": {
+    "server": {
+      "url": "https://your-ngrok-url.ngrok.io",
+      "endpoints": {
+        "tools": "/mcp/tools",
+        "health": "/health"
+      }
+    },
+    "tools": [
+      {
+        "name": "weather",
+        "title": "Weather Information",
+        "description": "Get current weather information for any location",
+        "icon": "🌤️",
+        "category": "information"
+      },
+      {
+        "name": "calculator",
+        "title": "Calculator",
+        "description": "Perform mathematical calculations",
+        "icon": "🧮",
+        "category": "productivity"
+      },
+      {
+        "name": "text-analysis",
+        "title": "Text Analysis",
+        "description": "Analyze text for sentiment, word count, or summary",
+        "icon": "📝",
+        "category": "analysis"
+      },
+      {
+        "name": "file-search",
+        "title": "File Search",
+        "description": "Search for files in the system",
+        "icon": "🔍",
+        "category": "productivity"
+      }
+    ]
+  },
+  "ui": {
+    "theme": "modern",
+    "components": {
+      "weather": "ui://widget/weather-widget.html",
+      "calculator": "ui://widget/calculator-widget.html",
+      "text-analysis": "ui://widget/text-analysis-widget.html",
+      "file-search": "ui://widget/file-search-widget.html"
+    }
+  },
+  "privacy": {
+    "data_collection": "minimal",
+    "data_retention": "none",
+    "third_party_sharing": false
+  },
+  "support": {
+    "email": "your-email@example.com",
+    "documentation": "https://your-domain.com/docs"
+  }
+}
