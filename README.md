@@ -240,3 +240,4 @@ For issues and questions:
 1. Check the troubleshooting section
 2. Review the ChatGPT Apps SDK documentation
 3. Open an issue in the repository
+# gpt-integration-tools
