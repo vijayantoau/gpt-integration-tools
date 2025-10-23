@@ -4,7 +4,7 @@ A comprehensive MCP (Model Context Protocol) server providing weather, calculato
 
 ## 🚀 Live Deployment
 
-**Vercel URL**: `https://gptintegration-osno2ng5z-vijays-projects-83d7f1fb.vercel.app`
+**Vercel URL**: `https://gptintegration-drr8jasbc-vijays-projects-83d7f1fb.vercel.app`
 
 ## 🛠️ Available Tools
 
@@ -41,7 +41,7 @@ gptintegration/
 ## 🔧 Integration Methods
 
 ### ChatGPT Integration
-- **URL**: `https://gptintegration-osno2ng5z-vijays-projects-83d7f1fb.vercel.app`
+- **URL**: `https://gptintegration-drr8jasbc-vijays-projects-83d7f1fb.vercel.app`
 - **Protocol**: MCP (Model Context Protocol)
 - **Method**: HTTP/JSON-RPC 2.0
 
@@ -69,7 +69,7 @@ python3 tests/debug_tool_calls.py
 
 ### Direct MCP Test
 ```bash
-curl -X POST https://gptintegration-osno2ng5z-vijays-projects-83d7f1fb.vercel.app/mcp \
+curl -X POST https://gptintegration-drr8jasbc-vijays-projects-83d7f1fb.vercel.app/mcp \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "weather", "arguments": {"location": "New York"}}}'
 ```

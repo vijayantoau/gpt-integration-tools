@@ -103,7 +103,7 @@ def chat_with_tools():
     ]
     
     # Your MCP server URL
-    MCP_SERVER_URL = "https://gptintegration-gkhz75qlq-vijays-projects-83d7f1fb.vercel.app"
+    MCP_SERVER_URL = "https://gptintegration-drr8jasbc-vijays-projects-83d7f1fb.vercel.app"
     
     def call_mcp_tool(tool_name, arguments):
         """
