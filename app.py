@@ -92,7 +92,19 @@ async def serve_web_interface():
     if os.path.exists(interface_path):
         return FileResponse(interface_path, media_type="text/html")
     else:
-        return {"message": "Web interface not found. Please ensure web_interface.html exists."}
+        return JSONResponse(
+            content={
+                "message": "GPT Integration Tools API",
+                "version": "1.0.0",
+                "status": "running",
+                "endpoints": {
+                    "mcp": "/mcp",
+                    "tools": "/mcp/tools",
+                    "health": "/health",
+                    "validate": "/mcp/validate"
+                }
+            }
+        )
 
 # Test route
 @app.get("/test")
@@ -130,12 +142,20 @@ async def mcp_endpoint():
                 "health": "/health"
             },
             "status": "ready",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "authTypeOverride": "NONE",
+            "auth_request": {
+                "supported_auth": [],
+                "oauth_client_params": None
+            }
         },
         headers={
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",
-            "Expires": "0"
+            "Expires": "0",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*"
         }
     )
 
@@ -397,6 +417,45 @@ async def file_search_tool(input_data: FileSearchInput):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"File search tool error: {str(e)}")
+
+# ChatGPT Apps connector validation endpoint
+@app.get("/mcp/validate")
+@app.post("/mcp/validate")
+async def validate_connector():
+    """
+    Endpoint for ChatGPT Apps to validate the connector
+    """
+    return JSONResponse(
+        content={
+            "valid": True,
+            "status": "ready",
+            "message": "Connector is valid and ready to use",
+            "timestamp": datetime.now().isoformat()
+        },
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
+
+# OPTIONS handler for CORS preflight requests
+@app.options("/mcp")
+@app.options("/mcp/tools")
+@app.options("/mcp/validate")
+async def options_handler():
+    """
+    Handle CORS preflight requests
+    """
+    return JSONResponse(
+        content={},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Max-Age": "86400"
+        }
+    )
 
 # Widget endpoints for UI components
 @app.get("/widget/{component_name}")
