@@ -3,7 +3,7 @@
   "description": "A comprehensive set of tools including weather, calculator, text analysis, and file search capabilities",
   "version": "1.0.0",
   "author": "Your Name",
-  "homepage": "https://gptintegration-4x6vyj65g-vijays-projects-83d7f1fb.vercel.app",
+  "homepage": "https://gptintegration-drr8jasbc-vijays-projects-83d7f1fb.vercel.app",
   "repository": "https://github.com/yourusername/gptintegration",
   "license": "MIT",
   "keywords": ["gpt", "tools", "weather", "calculator", "text-analysis", "file-search"],
@@ -14,7 +14,7 @@
   },
   "mcp": {
     "server": {
-      "url": "https://gptintegration-4x6vyj65g-vijays-projects-83d7f1fb.vercel.app",
+      "url": "https://gptintegration-drr8jasbc-vijays-projects-83d7f1fb.vercel.app",
       "endpoints": {
         "tools": "/mcp/tools",
         "health": "/health"

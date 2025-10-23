@@ -655,16 +655,20 @@ async def validate_connector():
             "status": "ready",
             "message": "Connector is valid and ready to use",
             "timestamp": datetime.now().isoformat(),
-            "protocol": "REST",
+            "protocol": "MCP",
             "endpoints": {
-                "call": "/mcp/call",
-                "tools": "/mcp/tools"
+                "mcp": "/mcp",
+                "tools": "/mcp/tools",
+                "health": "/health"
             }
         },
         headers={
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",
-            "Expires": "0"
+            "Expires": "0",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "*"
         }
     )
 
