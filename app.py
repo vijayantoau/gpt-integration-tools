@@ -147,25 +147,19 @@ async def get_app_manifest():
     else:
         raise HTTPException(status_code=404, detail="App manifest not found")
 
-# MCP endpoint for ChatGPT Apps - optimized for speed
+# MCP endpoint for ChatGPT Apps - proper MCP protocol implementation
 @app.get("/mcp")
-@app.post("/mcp")
-async def mcp_endpoint():
+async def mcp_info():
     """
-    Main MCP endpoint for ChatGPT Apps integration - optimized for speed
+    MCP server information endpoint
     """
     return JSONResponse(
         content={
             "name": "GPT Integration Tools",
             "version": "1.0.0",
             "description": "Weather, calculator, text analysis, and file search tools",
-            "protocol": "REST",
-            "status": "ready",
-            "authTypeOverride": "NONE",
-            "auth_request": {
-                "supported_auth": [],
-                "oauth_client_params": None
-            }
+            "protocol": "MCP",
+            "status": "ready"
         },
         headers={
             "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -178,6 +172,182 @@ async def mcp_endpoint():
             "Keep-Alive": "timeout=5, max=1000"
         }
     )
+
+@app.post("/mcp")
+async def mcp_endpoint(request: Request):
+    """
+    Main MCP endpoint for handling MCP protocol requests
+    """
+    try:
+        body = await request.json()
+        method = body.get("method")
+        params = body.get("params", {})
+        request_id = body.get("id")
+        
+        if method == "initialize":
+            return JSONResponse(
+                content={
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "result": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {
+                            "tools": {
+                                "listChanged": False
+                            }
+                        },
+                        "serverInfo": {
+                            "name": "GPT Integration Tools",
+                            "version": "1.0.0"
+                        }
+                    }
+                }
+            )
+        elif method == "tools/list":
+            return JSONResponse(
+                content={
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "result": {
+                        "tools": [
+                            {
+                                "name": "weather",
+                                "description": "Get current weather information for any location",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "location": {
+                                            "type": "string",
+                                            "description": "The city or location to get weather for"
+                                        },
+                                        "units": {
+                                            "type": "string",
+                                            "enum": ["celsius", "fahrenheit"],
+                                            "default": "celsius",
+                                            "description": "Temperature units"
+                                        }
+                                    },
+                                    "required": ["location"]
+                                }
+                            },
+                            {
+                                "name": "calculator",
+                                "description": "Perform mathematical calculations",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "expression": {
+                                            "type": "string",
+                                            "description": "Mathematical expression to evaluate"
+                                        }
+                                    },
+                                    "required": ["expression"]
+                                }
+                            },
+                            {
+                                "name": "text_analysis",
+                                "description": "Analyze text for sentiment, word count, or summary",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "text": {
+                                            "type": "string",
+                                            "description": "Text to analyze"
+                                        },
+                                        "analysis_type": {
+                                            "type": "string",
+                                            "enum": ["sentiment", "word_count", "summary"],
+                                            "default": "sentiment",
+                                            "description": "Type of analysis to perform"
+                                        }
+                                    },
+                                    "required": ["text"]
+                                }
+                            },
+                            {
+                                "name": "file_search",
+                                "description": "Search for files in the system",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "query": {
+                                            "type": "string",
+                                            "description": "Search query for files"
+                                        },
+                                        "file_type": {
+                                            "type": "string",
+                                            "description": "Optional file type filter"
+                                        }
+                                    },
+                                    "required": ["query"]
+                                }
+                            }
+                        ]
+                    }
+                }
+            )
+        elif method == "tools/call":
+            tool_name = params.get("name")
+            arguments = params.get("arguments", {})
+            
+            # Route to appropriate tool
+            if tool_name == "weather":
+                result = await weather_tool(WeatherInput(**arguments))
+            elif tool_name == "calculator":
+                result = await calculator_tool(CalculatorInput(**arguments))
+            elif tool_name == "text_analysis":
+                result = await text_analysis_tool(TextAnalysisInput(**arguments))
+            elif tool_name == "file_search":
+                result = await file_search_tool(FileSearchInput(**arguments))
+            else:
+                return JSONResponse(
+                    content={
+                        "jsonrpc": "2.0",
+                        "id": request_id,
+                        "error": {
+                            "code": -32601,
+                            "message": f"Unknown tool: {tool_name}"
+                        }
+                    }
+                )
+            
+            return JSONResponse(
+                content={
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "result": result
+                }
+            )
+        elif method == "ping":
+            return JSONResponse(
+                content={
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "result": {}
+                }
+            )
+        else:
+            return JSONResponse(
+                content={
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "error": {
+                        "code": -32601,
+                        "message": f"Method not found: {method}"
+                    }
+                }
+            )
+    except Exception as e:
+        return JSONResponse(
+            content={
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32603,
+                    "message": f"Internal error: {str(e)}"
+                }
+            }
+        )
 
 # MCP tools manifest endpoint
 @app.get("/mcp/tools")
