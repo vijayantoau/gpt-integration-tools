@@ -1,243 +1,105 @@
-# MCP Server for ChatGPT Apps SDK
+# GPT Integration Tools
 
-A Model Context Protocol (MCP) server built with FastAPI and Python that integrates with ChatGPT's new Apps SDK. This server provides sample tools with custom UI components that can be rendered inline within ChatGPT conversations.
+A comprehensive MCP (Model Context Protocol) server providing weather, calculator, text analysis, and file search tools for ChatGPT and Cursor integration.
 
-## Features
+## 🚀 Live Deployment
 
-- **Weather Tool**: Get current weather information for any location
-- **Calculator Tool**: Perform mathematical calculations
-- **Text Analysis Tool**: Analyze text for sentiment, word count, or summary
-- **File Search Tool**: Search for files in the system
-- **Custom UI Components**: Beautiful, responsive widgets for each tool output
-- **CORS Configuration**: Properly configured for ChatGPT integration
-- **Health Check**: Built-in health monitoring endpoint
+**Vercel URL**: `https://gptintegration-osno2ng5z-vijays-projects-83d7f1fb.vercel.app`
 
-## Project Structure
+## 🛠️ Available Tools
+
+1. **Weather** - Get current weather information for any location
+2. **Calculator** - Perform mathematical calculations
+3. **Text Analysis** - Analyze text for sentiment, word count, or summary
+4. **File Search** - Search for files in the system
+
+## 📁 Project Structure
 
 ```
 gptintegration/
-├── app.py                 # Main FastAPI application
-├── requirements.txt       # Python dependencies
-├── components/           # UI components directory
+├── app.py                    # Main FastAPI MCP server (Vercel deployment)
+├── mcp_server_stdio.py       # Local MCP server for Cursor
+├── mcp_proxy_server.py       # Proxy server (Cursor → Vercel)
+├── app_manifest.json         # ChatGPT Apps manifest
+├── vercel.json              # Vercel deployment config
+├── requirements.txt         # Python dependencies
+├── components/              # UI components
 │   ├── weather-widget.html
 │   ├── calculator-widget.html
 │   ├── text-analysis-widget.html
 │   └── file-search-widget.html
-├── .env                  # Environment variables (create this)
-└── README.md            # This file
+├── tests/                   # Test files
+│   ├── debug_tool_calls.py
+│   ├── chatgpt_sdk_example.py
+│   ├── simple_tool_test.py
+│   └── test_chatgpt_sdk.py
+└── docs/                    # Documentation
+    ├── CHATGPT_INTEGRATION.md
+    ├── DEPLOY_INSTRUCTIONS.md
+    └── TROUBLESHOOTING.md
 ```
 
-## Setup Instructions
+## 🔧 Integration Methods
 
-### 1. Install Dependencies
+### ChatGPT Integration
+- **URL**: `https://gptintegration-osno2ng5z-vijays-projects-83d7f1fb.vercel.app`
+- **Protocol**: MCP (Model Context Protocol)
+- **Method**: HTTP/JSON-RPC 2.0
 
+### Cursor Integration
+- **Local Server**: `mcp_server_stdio.py` (stdio transport)
+- **Proxy Option**: `mcp_proxy_server.py` (forwards to Vercel)
+- **Config**: `~/.cursor/mcp.json`
+
+## 🧪 Testing
+
+### Quick Test
 ```bash
-pip install -r requirements.txt
+python3 simple_tool_test.py
 ```
 
-### 2. Environment Configuration
-
-Create a `.env` file in the project root:
-
+### Full Debug (requires OpenAI API key)
 ```bash
-# Optional: Add any environment variables here
-# For example:
-# WEATHER_API_KEY=your_weather_api_key_here
-# DEBUG=True
+export OPENAI_API_KEY='your-key-here'
+python3 debug_tool_calls.py
 ```
 
-### 3. Run the Server
-
-#### Development Mode
+### Direct MCP Test
 ```bash
-python app.py
+curl -X POST https://gptintegration-osno2ng5z-vijays-projects-83d7f1fb.vercel.app/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "weather", "arguments": {"location": "New York"}}}'
 ```
 
-#### Production Mode with Uvicorn
+## 🚀 Deployment
+
+### Vercel (Current)
 ```bash
-uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+vercel --prod
 ```
-
-The server will be available at `http://localhost:8000`
-
-### 4. Test the Server
-
-Visit these endpoints to verify everything is working:
-
-- **Health Check**: `http://localhost:8000/health`
-- **Tools Manifest**: `http://localhost:8000/mcp/tools`
-- **API Documentation**: `http://localhost:8000/docs`
-
-## ChatGPT Integration
-
-### 1. Expose Your Server
-
-For local development, use ngrok to expose your server:
-
-```bash
-# Install ngrok if you haven't already
-# https://ngrok.com/
-
-# Expose your local server
-ngrok http 8000
-```
-
-Copy the public URL (e.g., `https://abc123.ngrok.io`)
-
-### 2. Configure ChatGPT App
-
-1. Go to [ChatGPT Apps SDK](https://platform.openai.com/apps-sdk)
-2. Create a new app
-3. Add your server URL as the MCP server endpoint
-4. The tools will be automatically discovered from the `/mcp/tools` endpoint
-
-### 3. Available Tools
-
-#### Weather Tool
-- **Endpoint**: `POST /tools/weather`
-- **Parameters**:
-  - `location` (required): City or location name
-  - `units` (optional): "celsius" or "fahrenheit" (default: "celsius")
-
-#### Calculator Tool
-- **Endpoint**: `POST /tools/calculator`
-- **Parameters**:
-  - `expression` (required): Mathematical expression to evaluate
-
-#### Text Analysis Tool
-- **Endpoint**: `POST /tools/text-analysis`
-- **Parameters**:
-  - `text` (required): Text to analyze
-  - `analysis_type` (optional): "sentiment", "word_count", or "summary" (default: "sentiment")
-
-#### File Search Tool
-- **Endpoint**: `POST /tools/file-search`
-- **Parameters**:
-  - `query` (required): Search query for files
-  - `file_type` (optional): File type filter (e.g., "txt", "pdf")
-
-## API Endpoints
-
-### Tool Endpoints
-- `POST /tools/weather` - Get weather information
-- `POST /tools/calculator` - Perform calculations
-- `POST /tools/text-analysis` - Analyze text
-- `POST /tools/file-search` - Search files
-
-### Utility Endpoints
-- `GET /health` - Health check
-- `GET /mcp/tools` - MCP tools manifest
-- `GET /widget/{component_name}` - Serve UI components
-- `GET /docs` - API documentation (Swagger UI)
-
-## Customization
-
-### Adding New Tools
-
-1. **Define the input schema** in `app.py`:
-```python
-class YourToolInput(BaseModel):
-    parameter1: str = Field(..., description="Description of parameter1")
-    parameter2: Optional[str] = Field(None, description="Description of parameter2")
-```
-
-2. **Create the tool endpoint**:
-```python
-@app.post("/tools/your-tool")
-async def your_tool(input_data: YourToolInput):
-    # Your tool logic here
-    return {
-        "content": [{"type": "text", "text": "Your response"}],
-        "structuredContent": {"key": "value"},
-        "_meta": {
-            "openai/outputTemplate": "ui://widget/your-widget.html",
-            "openai/toolInvocation/invoking": "Processing...",
-            "openai/toolInvocation/invoked": "Completed."
-        }
-    }
-```
-
-3. **Create a UI component** in `components/your-widget.html`
-4. **Add to tools manifest** in the `/mcp/tools` endpoint
-
-### Styling UI Components
-
-The UI components use modern CSS with:
-- Glassmorphism design with backdrop blur
-- Gradient backgrounds
-- Responsive grid layouts
-- Smooth animations
-- Dark theme optimized for ChatGPT
-
-## Deployment
 
 ### Local Development
 ```bash
-python app.py
+python3 run.py
 ```
 
-### Production Deployment
+## 📋 Endpoints
 
-#### Using Docker
-```dockerfile
-FROM python:3.11-slim
+- **MCP**: `/mcp` - Main MCP protocol endpoint
+- **Health**: `/health` - Health check
+- **Manifest**: `/manifest` - App manifest
+- **Validation**: `/mcp/validate` - Connector validation
+- **Tools**: `/mcp/tools` - Tools list
+- **Web UI**: `/` - Web interface
 
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+## 🔍 Architecture
 
-COPY . .
-EXPOSE 8000
+The system supports multiple integration patterns:
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
-```
+1. **Direct HTTP**: ChatGPT → Vercel MCP Server
+2. **Local Stdio**: Cursor → Local MCP Server
+3. **Proxy**: Cursor → Proxy Server → Vercel MCP Server
 
-#### Using Cloud Platforms
-- **Heroku**: Add a `Procfile` with `web: uvicorn app:app --host 0.0.0.0 --port $PORT`
-- **Railway**: Deploy directly from GitHub
-- **DigitalOcean App Platform**: Use the Python buildpack
-- **AWS/GCP/Azure**: Use container services or serverless functions
+## 📝 License
 
-## Security Considerations
-
-- The server includes CORS configuration for ChatGPT domains
-- Input validation using Pydantic models
-- Error handling with appropriate HTTP status codes
-- Consider adding authentication for production use
-
-## Troubleshooting
-
-### Common Issues
-
-1. **CORS Errors**: Ensure your server URL is added to the CORS origins list
-2. **Component Not Found**: Check that UI components are in the `components/` directory
-3. **Tool Not Working**: Verify the tool is listed in `/mcp/tools` endpoint
-4. **Port Already in Use**: Change the port in the uvicorn command
-
-### Debug Mode
-
-Enable debug mode by setting environment variable:
-```bash
-export DEBUG=True
-python app.py
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is open source and available under the MIT License.
-
-## Support
-
-For issues and questions:
-1. Check the troubleshooting section
-2. Review the ChatGPT Apps SDK documentation
-3. Open an issue in the repository
-# gpt-integration-tools
+MIT License
