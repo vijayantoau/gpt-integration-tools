@@ -11,7 +11,7 @@ def test_tool_call_flow():
     Show the complete flow of a tool call
     """
     
-    MCP_SERVER_URL = "https://gptintegration-4l8whbu5h-vijays-projects-83d7f1fb.vercel.app"
+    MCP_SERVER_URL = "https://gptintegration-gkhz75qlq-vijays-projects-83d7f1fb.vercel.app"
     
     print("🔍 TOOL CALL VERIFICATION EXAMPLE")
     print("=" * 50)
