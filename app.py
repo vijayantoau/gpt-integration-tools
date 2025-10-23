@@ -14,7 +14,6 @@ import asyncio
 from datetime import datetime
 import random
 import time
-from mcp_server import mcp_server
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -138,10 +137,8 @@ async def mcp_endpoint():
             "name": "GPT Integration Tools",
             "version": "1.0.0",
             "description": "A comprehensive set of tools including weather, calculator, text analysis, and file search capabilities",
-            "protocol": "MCP",
+            "protocol": "REST",
             "endpoints": {
-                "sse": "/mcp/sse",
-                "call": "/mcp/call",
                 "tools": "/mcp/tools",
                 "health": "/health",
                 "validate": "/mcp/validate"
@@ -155,8 +152,7 @@ async def mcp_endpoint():
             },
             "capabilities": {
                 "tools": True,
-                "sse": True,
-                "websocket": False
+                "rest": True
             }
         },
         headers={
@@ -428,59 +424,47 @@ async def file_search_tool(input_data: FileSearchInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"File search tool error: {str(e)}")
 
-# Proper MCP Server-Sent Events endpoint
-@app.get("/mcp/sse")
-async def mcp_sse_endpoint():
-    """
-    MCP Server-Sent Events endpoint for ChatGPT Apps
-    """
-    async def event_generator():
-        # Send initial MCP initialization message
-        init_message = {
-            "jsonrpc": "2.0",
-            "method": "initialize",
-            "params": {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {
-                    "tools": {}
-                },
-                "serverInfo": {
-                    "name": "GPT Integration Tools",
-                    "version": "1.0.0"
-                }
-            },
-            "id": 1
-        }
-        
-        yield f"data: {json.dumps(init_message)}\n\n"
-        
-        # Keep connection alive
-        while True:
-            await asyncio.sleep(30)
-            yield f"data: {json.dumps({'type': 'ping', 'timestamp': datetime.now().isoformat()})}\n\n"
-    
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
-        }
-    )
-
-# MCP WebSocket-style endpoint for tool calls
+# Simple MCP-compatible endpoint for tool calls
 @app.post("/mcp/call")
 async def mcp_tool_call(request: Request):
     """
-    Handle MCP tool calls via POST
+    Handle tool calls in MCP-compatible format
     """
     try:
         body = await request.json()
-        response = await mcp_server.handle_request(body)
-        return JSONResponse(content=response)
+        method = body.get("method")
+        params = body.get("params", {})
+        
+        if method == "tools/call":
+            tool_name = params.get("name")
+            arguments = params.get("arguments", {})
+            
+            # Route to appropriate tool
+            if tool_name == "weather":
+                result = await weather_tool(WeatherInput(**arguments))
+            elif tool_name == "calculator":
+                result = await calculator_tool(CalculatorInput(**arguments))
+            elif tool_name == "text-analysis":
+                result = await text_analysis_tool(TextAnalysisInput(**arguments))
+            elif tool_name == "file-search":
+                result = await file_search_tool(FileSearchInput(**arguments))
+            else:
+                raise ValueError(f"Unknown tool: {tool_name}")
+            
+            return JSONResponse(content={
+                "jsonrpc": "2.0",
+                "id": body.get("id"),
+                "result": result
+            })
+        else:
+            return JSONResponse(content={
+                "jsonrpc": "2.0",
+                "id": body.get("id"),
+                "error": {
+                    "code": -32601,
+                    "message": f"Method not found: {method}"
+                }
+            })
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -507,10 +491,10 @@ async def validate_connector():
             "status": "ready",
             "message": "Connector is valid and ready to use",
             "timestamp": datetime.now().isoformat(),
-            "protocol": "MCP",
+            "protocol": "REST",
             "endpoints": {
-                "sse": "/mcp/sse",
-                "call": "/mcp/call"
+                "call": "/mcp/call",
+                "tools": "/mcp/tools"
             }
         },
         headers={
@@ -524,7 +508,6 @@ async def validate_connector():
 @app.options("/mcp")
 @app.options("/mcp/tools")
 @app.options("/mcp/validate")
-@app.options("/mcp/sse")
 @app.options("/mcp/call")
 async def options_handler():
     """
