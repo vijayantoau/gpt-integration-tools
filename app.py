@@ -225,7 +225,7 @@ async def get_tools_manifest():
                     }
                 },
                 {
-                    "name": "text-analysis",
+                    "name": "text_analysis",
                     "title": "Text Analysis",
                     "description": "Analyze text for sentiment, word count, or summary",
                     "inputSchema": {
@@ -246,7 +246,7 @@ async def get_tools_manifest():
                     }
                 },
                 {
-                    "name": "file-search",
+                    "name": "file_search",
                     "title": "File Search",
                     "description": "Search for files in the system",
                     "inputSchema": {
@@ -336,7 +336,7 @@ async def calculator_tool(input_data: CalculatorInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Calculator tool error: {str(e)}")
 
-@app.post("/tools/text-analysis")
+@app.post("/tools/text_analysis")
 async def text_analysis_tool(input_data: TextAnalysisInput):
     """
     Text analysis tool implementation
@@ -396,7 +396,7 @@ async def text_analysis_tool(input_data: TextAnalysisInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Text analysis tool error: {str(e)}")
 
-@app.post("/tools/file-search")
+@app.post("/tools/file_search")
 async def file_search_tool(input_data: FileSearchInput):
     """
     File search tool implementation
@@ -458,9 +458,9 @@ async def mcp_tool_call(request: Request):
                 result = await weather_tool(WeatherInput(**arguments))
             elif tool_name == "calculator":
                 result = await calculator_tool(CalculatorInput(**arguments))
-            elif tool_name == "text-analysis":
+            elif tool_name == "text_analysis":
                 result = await text_analysis_tool(TextAnalysisInput(**arguments))
-            elif tool_name == "file-search":
+            elif tool_name == "file_search":
                 result = await file_search_tool(FileSearchInput(**arguments))
             else:
                 raise ValueError(f"Unknown tool: {tool_name}")

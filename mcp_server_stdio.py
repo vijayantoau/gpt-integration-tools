@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-Proper MCP Server Implementation for ChatGPT Apps Integration
-Implements the Model Context Protocol with Server-Sent Events
+Proper MCP Server Implementation for Cursor Integration
+Uses stdio transport as expected by Cursor
 """
 
 import asyncio
 import json
+import sys
 import logging
 from datetime import datetime
 from typing import Dict, Any, List
 import random
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class MCPServer:
@@ -100,7 +101,9 @@ class MCPServer:
             "result": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {
-                    "tools": {}
+                    "tools": {
+                        "listChanged": False
+                    }
                 },
                 "serverInfo": {
                     "name": "GPT Integration Tools",
@@ -259,6 +262,14 @@ class MCPServer:
             "text": result + f"\nFiles: {', '.join(mock_files)}"
         }
 
+    async def handle_ping(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle ping request"""
+        return {
+            "jsonrpc": "2.0",
+            "id": request.get("id"),
+            "result": {}
+        }
+
     async def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Handle incoming MCP request"""
         method = request.get("method")
@@ -269,6 +280,11 @@ class MCPServer:
             return await self.handle_tools_list(request)
         elif method == "tools/call":
             return await self.handle_tools_call(request)
+        elif method == "ping":
+            return await self.handle_ping(request)
+        elif method == "notifications/initialized":
+            # Handle initialization notification (notifications don't have responses)
+            return None
         else:
             return {
                 "jsonrpc": "2.0",
@@ -279,5 +295,51 @@ class MCPServer:
                 }
             }
 
-# Global MCP server instance
-mcp_server = MCPServer()
+async def main():
+    """Main MCP server loop using stdio transport"""
+    server = MCPServer()
+    
+    # Read from stdin and write to stdout
+    while True:
+        try:
+            # Read JSON-RPC request from stdin
+            line = await asyncio.get_event_loop().run_in_executor(None, sys.stdin.readline)
+            if not line:
+                break
+                
+            request = json.loads(line.strip())
+            
+            # Handle the request
+            response = await server.handle_request(request)
+            
+            # Only send response if there is one (notifications don't have responses)
+            if response is not None:
+                # Write JSON-RPC response to stdout
+                print(json.dumps(response), flush=True)
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error: {e}")
+            error_response = {
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32700,
+                    "message": "Parse error"
+                }
+            }
+            print(json.dumps(error_response), flush=True)
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+            error_response = {
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32603,
+                    "message": f"Internal error: {str(e)}"
+                }
+            }
+            print(json.dumps(error_response), flush=True)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
