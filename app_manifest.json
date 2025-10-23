@@ -3,7 +3,7 @@
   "description": "A comprehensive set of tools including weather, calculator, text analysis, and file search capabilities",
   "version": "1.0.0",
   "author": "Your Name",
-  "homepage": "https://gptintegration-48zkxpwiy-vijays-projects-83d7f1fb.vercel.app",
+  "homepage": "https://gptintegration-4x6vyj65g-vijays-projects-83d7f1fb.vercel.app",
   "repository": "https://github.com/yourusername/gptintegration",
   "license": "MIT",
   "keywords": ["gpt", "tools", "weather", "calculator", "text-analysis", "file-search"],
@@ -14,7 +14,7 @@
   },
   "mcp": {
     "server": {
-      "url": "https://gptintegration-48zkxpwiy-vijays-projects-83d7f1fb.vercel.app",
+      "url": "https://gptintegration-4x6vyj65g-vijays-projects-83d7f1fb.vercel.app",
       "endpoints": {
         "tools": "/mcp/tools",
         "health": "/health"
@@ -36,14 +36,14 @@
         "category": "productivity"
       },
       {
-        "name": "text-analysis",
+        "name": "text_analysis",
         "title": "Text Analysis",
         "description": "Analyze text for sentiment, word count, or summary",
         "icon": "📝",
         "category": "analysis"
       },
       {
-        "name": "file-search",
+        "name": "file_search",
         "title": "File Search",
         "description": "Search for files in the system",
         "icon": "🔍",
@@ -56,8 +56,8 @@
     "components": {
       "weather": "ui://widget/weather-widget.html",
       "calculator": "ui://widget/calculator-widget.html",
-      "text-analysis": "ui://widget/text-analysis-widget.html",
-      "file-search": "ui://widget/file-search-widget.html"
+      "text_analysis": "ui://widget/text-analysis-widget.html",
+      "file_search": "ui://widget/file-search-widget.html"
     }
   },
   "privacy": {
