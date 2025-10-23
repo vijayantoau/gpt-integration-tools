@@ -294,6 +294,8 @@ async def mcp_endpoint(request: Request):
             print(f"🔧 MCP TOOL CALLED: {tool_name}")
             print(f"   Arguments: {arguments}")
             print(f"   Request ID: {request_id}")
+            print(f"   User-Agent: {request.headers.get('User-Agent', 'Unknown')}")
+            print(f"   Origin: {request.headers.get('Origin', 'Unknown')}")
             
             # Route to appropriate tool
             if tool_name == "weather":
@@ -474,14 +476,9 @@ async def weather_tool(input_data: WeatherInput):
         return {
             "content": [{
                 "type": "text",
-                "text": f"Weather in {input_data.location}: {weather_data['temperature']}{temp_symbol}, {weather_data['condition']}"
+                "text": f"Weather in {input_data.location}: {weather_data['temperature']}{temp_symbol}, {weather_data['condition']}. Humidity: {weather_data['humidity']}%, Wind: {weather_data['wind_speed']} km/h"
             }],
-            "structuredContent": weather_data,
-            "_meta": {
-                "openai/outputTemplate": "ui://widget/weather-widget.html",
-                "openai/toolInvocation/invoking": "Fetching weather data...",
-                "openai/toolInvocation/invoked": "Weather data retrieved successfully."
-            }
+            "isError": False
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Weather tool error: {str(e)}")
@@ -500,16 +497,7 @@ async def calculator_tool(input_data: CalculatorInput):
                 "type": "text",
                 "text": f"{input_data.expression} = {result}"
             }],
-            "structuredContent": {
-                "expression": input_data.expression,
-                "result": result,
-                "timestamp": datetime.now().isoformat()
-            },
-            "_meta": {
-                "openai/outputTemplate": "ui://widget/calculator-widget.html",
-                "openai/toolInvocation/invoking": "Calculating...",
-                "openai/toolInvocation/invoked": "Calculation completed."
-            }
+            "isError": False
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Calculator tool error: {str(e)}")
@@ -559,17 +547,7 @@ async def text_analysis_tool(input_data: TextAnalysisInput):
                 "type": "text",
                 "text": result
             }],
-            "structuredContent": {
-                "text": text,
-                "analysis_type": analysis_type,
-                "result": result,
-                "timestamp": datetime.now().isoformat()
-            },
-            "_meta": {
-                "openai/outputTemplate": "ui://widget/text-analysis-widget.html",
-                "openai/toolInvocation/invoking": "Analyzing text...",
-                "openai/toolInvocation/invoked": "Analysis completed."
-            }
+            "isError": False
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Text analysis tool error: {str(e)}")
@@ -598,20 +576,9 @@ async def file_search_tool(input_data: FileSearchInput):
         return {
             "content": [{
                 "type": "text",
-                "text": result
+                "text": result + f"\nFiles: {', '.join(mock_files)}"
             }],
-            "structuredContent": {
-                "query": input_data.query,
-                "file_type": input_data.file_type,
-                "files": mock_files,
-                "count": len(mock_files),
-                "timestamp": datetime.now().isoformat()
-            },
-            "_meta": {
-                "openai/outputTemplate": "ui://widget/file-search-widget.html",
-                "openai/toolInvocation/invoking": "Searching files...",
-                "openai/toolInvocation/invoked": "Search completed."
-            }
+            "isError": False
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"File search tool error: {str(e)}")
