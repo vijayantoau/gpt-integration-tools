@@ -290,6 +290,11 @@ async def mcp_endpoint(request: Request):
             tool_name = params.get("name")
             arguments = params.get("arguments", {})
             
+            # Log tool call for debugging
+            print(f"🔧 MCP TOOL CALLED: {tool_name}")
+            print(f"   Arguments: {arguments}")
+            print(f"   Request ID: {request_id}")
+            
             # Route to appropriate tool
             if tool_name == "weather":
                 result = await weather_tool(WeatherInput(**arguments))
@@ -300,6 +305,7 @@ async def mcp_endpoint(request: Request):
             elif tool_name == "file_search":
                 result = await file_search_tool(FileSearchInput(**arguments))
             else:
+                print(f"❌ Unknown tool called: {tool_name}")
                 return JSONResponse(
                     content={
                         "jsonrpc": "2.0",
@@ -310,6 +316,8 @@ async def mcp_endpoint(request: Request):
                         }
                     }
                 )
+            
+            print(f"✅ Tool {tool_name} executed successfully")
             
             return JSONResponse(
                 content={
