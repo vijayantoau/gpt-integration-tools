@@ -3,17 +3,15 @@
 FastAPI MCP Server with ChatGPT Apps Integration
 """
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import uvicorn
 import os
 import json
-import asyncio
 from datetime import datetime
 import random
-import time
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -30,21 +28,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Add timeout middleware
-@app.middleware("http")
-async def timeout_middleware(request: Request, call_next):
-    start_time = time.time()
-    try:
-        response = await asyncio.wait_for(call_next(request), timeout=10.0)
-        process_time = time.time() - start_time
-        response.headers["X-Process-Time"] = str(process_time)
-        return response
-    except asyncio.TimeoutError:
-        return JSONResponse(
-            status_code=504,
-            content={"error": "Request timeout", "message": "The request took too long to process"}
-        )
 
 # Pydantic models for tool inputs
 class WeatherInput(BaseModel):
@@ -68,19 +51,10 @@ async def health_check():
     """
     Health check endpoint
     """
-    return JSONResponse(
-        content={
-            "status": "healthy",
-            "timestamp": datetime.now().isoformat(),
-            "version": "1.0.0",
-            "uptime": "running"
-        },
-        headers={
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0"
-        }
-    )
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }
 
 # Serve web interface
 @app.get("/")
@@ -120,24 +94,15 @@ async def mcp_endpoint():
     """
     Main MCP endpoint for ChatGPT Apps integration
     """
-    return JSONResponse(
-        content={
-            "name": "GPT Integration Tools",
-            "version": "1.0.0",
-            "description": "A comprehensive set of tools including weather, calculator, text analysis, and file search capabilities",
-            "endpoints": {
-                "tools": "/mcp/tools",
-                "health": "/health"
-            },
-            "status": "ready",
-            "timestamp": datetime.now().isoformat()
-        },
-        headers={
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0"
+    return {
+        "name": "GPT Integration Tools",
+        "version": "1.0.0",
+        "description": "A comprehensive set of tools including weather, calculator, text analysis, and file search capabilities",
+        "endpoints": {
+            "tools": "/mcp/tools",
+            "health": "/health"
         }
-    )
+    }
 
 # MCP tools manifest endpoint
 @app.get("/mcp/tools")
@@ -145,93 +110,86 @@ async def get_tools_manifest():
     """
     Return the tools manifest for MCP
     """
-    return JSONResponse(
-        content={
-            "tools": [
-                {
-                    "name": "weather",
-                    "title": "Weather Information",
-                    "description": "Get current weather information for any location",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "location": {
-                                "type": "string",
-                                "description": "The city or location to get weather for"
-                            },
-                            "units": {
-                                "type": "string",
-                                "enum": ["celsius", "fahrenheit"],
-                                "default": "celsius",
-                                "description": "Temperature units"
-                            }
+    return {
+        "tools": [
+            {
+                "name": "weather",
+                "title": "Weather Information",
+                "description": "Get current weather information for any location",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "The city or location to get weather for"
                         },
-                        "required": ["location"]
-                    }
-                },
-                {
-                    "name": "calculator",
-                    "title": "Calculator",
-                    "description": "Perform mathematical calculations",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "expression": {
-                                "type": "string",
-                                "description": "Mathematical expression to evaluate"
-                            }
-                        },
-                        "required": ["expression"]
-                    }
-                },
-                {
-                    "name": "text-analysis",
-                    "title": "Text Analysis",
-                    "description": "Analyze text for sentiment, word count, or summary",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "text": {
-                                "type": "string",
-                                "description": "Text to analyze"
-                            },
-                            "analysis_type": {
-                                "type": "string",
-                                "enum": ["sentiment", "word_count", "summary"],
-                                "default": "sentiment",
-                                "description": "Type of analysis to perform"
-                            }
-                        },
-                        "required": ["text"]
-                    }
-                },
-                {
-                    "name": "file-search",
-                    "title": "File Search",
-                    "description": "Search for files in the system",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "query": {
-                                "type": "string",
-                                "description": "Search query for files"
-                            },
-                            "file_type": {
-                                "type": "string",
-                                "description": "Optional file type filter"
-                            }
-                        },
-                        "required": ["query"]
-                    }
+                        "units": {
+                            "type": "string",
+                            "enum": ["celsius", "fahrenheit"],
+                            "default": "celsius",
+                            "description": "Temperature units"
+                        }
+                    },
+                    "required": ["location"]
                 }
-            ]
-        },
-        headers={
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0"
-        }
-    )
+            },
+            {
+                "name": "calculator",
+                "title": "Calculator",
+                "description": "Perform mathematical calculations",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "expression": {
+                            "type": "string",
+                            "description": "Mathematical expression to evaluate"
+                        }
+                    },
+                    "required": ["expression"]
+                }
+            },
+            {
+                "name": "text-analysis",
+                "title": "Text Analysis",
+                "description": "Analyze text for sentiment, word count, or summary",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "text": {
+                            "type": "string",
+                            "description": "Text to analyze"
+                        },
+                        "analysis_type": {
+                            "type": "string",
+                            "enum": ["sentiment", "word_count", "summary"],
+                            "default": "sentiment",
+                            "description": "Type of analysis to perform"
+                        }
+                    },
+                    "required": ["text"]
+                }
+            },
+            {
+                "name": "file-search",
+                "title": "File Search",
+                "description": "Search for files in the system",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Search query for files"
+                        },
+                        "file_type": {
+                            "type": "string",
+                            "description": "Optional file type filter"
+                        }
+                    },
+                    "required": ["query"]
+                }
+            }
+        ]
+    }
 
 # Tool execution endpoints
 @app.post("/tools/weather")
@@ -412,3 +370,4 @@ async def get_widget(component_name: str):
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
