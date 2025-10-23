@@ -31,14 +31,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add timeout middleware
+# Add timeout middleware with faster response
 @app.middleware("http")
 async def timeout_middleware(request: Request, call_next):
     start_time = time.time()
     try:
-        response = await asyncio.wait_for(call_next(request), timeout=10.0)
+        # Reduce timeout to 5 seconds for faster response
+        response = await asyncio.wait_for(call_next(request), timeout=5.0)
         process_time = time.time() - start_time
         response.headers["X-Process-Time"] = str(process_time)
+        
+        # Add keep-alive headers
+        response.headers["Connection"] = "keep-alive"
+        response.headers["Keep-Alive"] = "timeout=5, max=1000"
+        
         return response
     except asyncio.TimeoutError:
         return JSONResponse(
@@ -78,7 +84,23 @@ async def health_check():
         headers={
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",
-            "Expires": "0"
+            "Expires": "0",
+            "Connection": "keep-alive",
+            "Keep-Alive": "timeout=5, max=1000"
+        }
+    )
+
+# Super fast ping endpoint for ChatGPT Apps
+@app.get("/ping")
+async def ping():
+    """
+    Ultra-fast ping endpoint for ChatGPT Apps validation
+    """
+    return JSONResponse(
+        content={"pong": True},
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive"
         }
     )
 
@@ -125,34 +147,24 @@ async def get_app_manifest():
     else:
         raise HTTPException(status_code=404, detail="App manifest not found")
 
-# MCP endpoint for ChatGPT Apps
+# MCP endpoint for ChatGPT Apps - optimized for speed
 @app.get("/mcp")
 @app.post("/mcp")
 async def mcp_endpoint():
     """
-    Main MCP endpoint for ChatGPT Apps integration
+    Main MCP endpoint for ChatGPT Apps integration - optimized for speed
     """
     return JSONResponse(
         content={
             "name": "GPT Integration Tools",
             "version": "1.0.0",
-            "description": "A comprehensive set of tools including weather, calculator, text analysis, and file search capabilities",
+            "description": "Weather, calculator, text analysis, and file search tools",
             "protocol": "REST",
-            "endpoints": {
-                "tools": "/mcp/tools",
-                "health": "/health",
-                "validate": "/mcp/validate"
-            },
             "status": "ready",
-            "timestamp": datetime.now().isoformat(),
             "authTypeOverride": "NONE",
             "auth_request": {
                 "supported_auth": [],
                 "oauth_client_params": None
-            },
-            "capabilities": {
-                "tools": True,
-                "rest": True
             }
         },
         headers={
@@ -161,7 +173,9 @@ async def mcp_endpoint():
             "Expires": "0",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-            "Access-Control-Allow-Headers": "*"
+            "Access-Control-Allow-Headers": "*",
+            "Connection": "keep-alive",
+            "Keep-Alive": "timeout=5, max=1000"
         }
     )
 
