@@ -5,7 +5,7 @@ FastAPI MCP Server with ChatGPT Apps Integration
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
 import uvicorn
 import os
@@ -14,6 +14,7 @@ import asyncio
 from datetime import datetime
 import random
 import time
+from mcp_server import mcp_server
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -137,9 +138,13 @@ async def mcp_endpoint():
             "name": "GPT Integration Tools",
             "version": "1.0.0",
             "description": "A comprehensive set of tools including weather, calculator, text analysis, and file search capabilities",
+            "protocol": "MCP",
             "endpoints": {
+                "sse": "/mcp/sse",
+                "call": "/mcp/call",
                 "tools": "/mcp/tools",
-                "health": "/health"
+                "health": "/health",
+                "validate": "/mcp/validate"
             },
             "status": "ready",
             "timestamp": datetime.now().isoformat(),
@@ -147,6 +152,11 @@ async def mcp_endpoint():
             "auth_request": {
                 "supported_auth": [],
                 "oauth_client_params": None
+            },
+            "capabilities": {
+                "tools": True,
+                "sse": True,
+                "websocket": False
             }
         },
         headers={
@@ -418,6 +428,72 @@ async def file_search_tool(input_data: FileSearchInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"File search tool error: {str(e)}")
 
+# Proper MCP Server-Sent Events endpoint
+@app.get("/mcp/sse")
+async def mcp_sse_endpoint():
+    """
+    MCP Server-Sent Events endpoint for ChatGPT Apps
+    """
+    async def event_generator():
+        # Send initial MCP initialization message
+        init_message = {
+            "jsonrpc": "2.0",
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {
+                    "tools": {}
+                },
+                "serverInfo": {
+                    "name": "GPT Integration Tools",
+                    "version": "1.0.0"
+                }
+            },
+            "id": 1
+        }
+        
+        yield f"data: {json.dumps(init_message)}\n\n"
+        
+        # Keep connection alive
+        while True:
+            await asyncio.sleep(30)
+            yield f"data: {json.dumps({'type': 'ping', 'timestamp': datetime.now().isoformat()})}\n\n"
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+        }
+    )
+
+# MCP WebSocket-style endpoint for tool calls
+@app.post("/mcp/call")
+async def mcp_tool_call(request: Request):
+    """
+    Handle MCP tool calls via POST
+    """
+    try:
+        body = await request.json()
+        response = await mcp_server.handle_request(body)
+        return JSONResponse(content=response)
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32603,
+                    "message": f"Internal error: {str(e)}"
+                }
+            }
+        )
+
 # ChatGPT Apps connector validation endpoint
 @app.get("/mcp/validate")
 @app.post("/mcp/validate")
@@ -430,7 +506,12 @@ async def validate_connector():
             "valid": True,
             "status": "ready",
             "message": "Connector is valid and ready to use",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "protocol": "MCP",
+            "endpoints": {
+                "sse": "/mcp/sse",
+                "call": "/mcp/call"
+            }
         },
         headers={
             "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -443,6 +524,8 @@ async def validate_connector():
 @app.options("/mcp")
 @app.options("/mcp/tools")
 @app.options("/mcp/validate")
+@app.options("/mcp/sse")
+@app.options("/mcp/call")
 async def options_handler():
     """
     Handle CORS preflight requests

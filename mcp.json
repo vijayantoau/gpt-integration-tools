@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "gpt-integration-tools": {
+      "url": "https://gptintegration-48zkxpwiy-vijays-projects-83d7f1fb.vercel.app/mcp/sse",
+      "type": "sse",
+      "headers": {
+        "Accept": "text/event-stream",
+        "Cache-Control": "no-cache"
+      },
+      "description": "Weather, calculator, text analysis, and file search tools"
+    }
+  }
+}
