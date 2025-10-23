@@ -687,17 +687,7 @@ async def options_handler():
         }
     )
 
-# Widget endpoints for UI components
-@app.get("/widget/{component_name}")
-async def get_widget(component_name: str):
-    """
-    Serve widget components for the web interface
-    """
-    widget_path = f"components/{component_name}.html"
-    if os.path.exists(widget_path):
-        return FileResponse(widget_path, media_type="text/html")
-    else:
-        raise HTTPException(status_code=404, detail="Widget not found")
+# Widget endpoints removed - components directory cleaned up
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

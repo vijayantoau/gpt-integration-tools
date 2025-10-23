@@ -19,21 +19,20 @@ A comprehensive MCP (Model Context Protocol) server providing weather, calculato
 gptintegration/
 ├── app.py                    # Main FastAPI MCP server (Vercel deployment)
 ├── mcp_server_stdio.py       # Local MCP server for Cursor
-├── mcp_proxy_server.py       # Proxy server (Cursor → Vercel)
 ├── app_manifest.json         # ChatGPT Apps manifest
 ├── vercel.json              # Vercel deployment config
+├── vercel_app.py            # Vercel entry point
+├── run.py                   # Local development server
+├── deploy.sh                # Deployment script
 ├── requirements.txt         # Python dependencies
-├── components/              # UI components
-│   ├── weather-widget.html
-│   ├── calculator-widget.html
-│   ├── text-analysis-widget.html
-│   └── file-search-widget.html
 ├── tests/                   # Test files
+│   ├── run_tests.py         # Test runner
 │   ├── debug_tool_calls.py
 │   ├── chatgpt_sdk_example.py
 │   ├── simple_tool_test.py
 │   └── test_chatgpt_sdk.py
 └── docs/                    # Documentation
+    ├── ARCHITECTURE.md      # System architecture
     ├── CHATGPT_INTEGRATION.md
     ├── DEPLOY_INSTRUCTIONS.md
     └── TROUBLESHOOTING.md
@@ -48,20 +47,24 @@ gptintegration/
 
 ### Cursor Integration
 - **Local Server**: `mcp_server_stdio.py` (stdio transport)
-- **Proxy Option**: `mcp_proxy_server.py` (forwards to Vercel)
 - **Config**: `~/.cursor/mcp.json`
 
 ## 🧪 Testing
 
 ### Quick Test
 ```bash
-python3 simple_tool_test.py
+python3 tests/simple_tool_test.py
+```
+
+### Run All Tests
+```bash
+python3 tests/run_tests.py
 ```
 
 ### Full Debug (requires OpenAI API key)
 ```bash
 export OPENAI_API_KEY='your-key-here'
-python3 debug_tool_calls.py
+python3 tests/debug_tool_calls.py
 ```
 
 ### Direct MCP Test
