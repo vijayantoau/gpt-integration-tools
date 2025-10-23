@@ -70,6 +70,7 @@ class FileSearchInput(BaseModel):
 
 # Health check endpoint
 @app.get("/health")
+@app.head("/health")
 async def health_check():
     """
     Health check endpoint
@@ -106,6 +107,7 @@ async def ping():
 
 # Serve web interface
 @app.get("/")
+@app.head("/")
 async def serve_web_interface():
     """
     Serve the main web interface for testing tools
@@ -135,6 +137,7 @@ async def test_route():
 
 # App manifest endpoint
 @app.get("/manifest")
+@app.head("/manifest")
 async def get_app_manifest():
     """
     Return the app manifest for ChatGPT Apps SDK
@@ -149,6 +152,7 @@ async def get_app_manifest():
 
 # MCP endpoint for ChatGPT Apps - proper MCP protocol implementation
 @app.get("/mcp")
+@app.head("/mcp")
 async def mcp_info():
     """
     MCP server information endpoint
@@ -639,6 +643,7 @@ async def mcp_tool_call(request: Request):
 
 # ChatGPT Apps connector validation endpoint
 @app.get("/mcp/validate")
+@app.head("/mcp/validate")
 @app.post("/mcp/validate")
 async def validate_connector():
     """
